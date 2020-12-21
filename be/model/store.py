@@ -1,13 +1,22 @@
 import logging
 import os
-import sqlite3 as sqlite
+import psycopg2 as pg
 
 
 class Store:
     database: str
+    user: str
+    password: str
+    host: str
+    port: str
 
-    def __init__(self, db_path):
-        self.database = os.path.join(db_path, "be.db")
+    def __init__(self, database, user, password, host, port):
+        self.database = database
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
+        
         self.init_tables()
 
     def init_tables(self):
@@ -42,20 +51,28 @@ class Store:
             )
 
             conn.commit()
-        except sqlite.Error as e:
+        except pg.Error as e:
             logging.error(e)
             conn.rollback()
 
-    def get_db_conn(self) -> sqlite.Connection:
-        return sqlite.connect(self.database)
+    def get_db_conn(self) -> pg._psycopg.connection:
+        return pg.connect(database=self.database,
+                          user=self.user,
+                          password=self.password,
+                          host=self.host,
+                          port=self.port)
 
 
 database_instance: Store = None
 
 
-def init_database(db_path):
+def init_database(database="bookstore",
+                  user="root",
+                  password="123456",
+                  host="localhost",
+                  port="5432"):
     global database_instance
-    database_instance = Store(db_path)
+    database_instance = Store(database, user, password, host, port)
 
 
 def get_db_conn():
