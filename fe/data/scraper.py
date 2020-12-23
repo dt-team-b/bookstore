@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from lxml import etree
-import sqlite3
+import psycopg2 as pg
 import re
 import requests
 import random
@@ -71,26 +71,24 @@ def get_user_agent():
 
 
 class Scraper:
-    database: str
     tag: str
     page: int
 
     def __init__(self):
-        self.database = "book.db"
         self.tag = ""
         self.page = 0
         self.pattern_number = re.compile(r"\d+\.?\d*")
         logging.basicConfig(filename="scraper.log", level=logging.ERROR)
 
     def get_current_progress(self) -> ():
-        conn = sqlite3.connect(self.database)
+        conn = pg.connect(database="bookstore", user="root", password="123456", host="localhost", port="5432")
         results = conn.execute("SELECT tag, page from progress where id = '0'")
         for row in results:
             return row[0], row[1]
         return "", 0
 
     def save_current_progress(self, current_tag, current_page):
-        conn = sqlite3.connect(self.database)
+        conn = pg.connect(database="bookstore", user="root", password="123456", host="localhost", port="5432")
         conn.execute(
             "UPDATE progress set tag = '{}', page = {} where id = '0'".format(
                 current_tag, current_page
@@ -113,11 +111,11 @@ class Scraper:
         return True
 
     def create_tables(self):
-        conn = sqlite3.connect(self.database)
+        conn = pg.connect(database="bookstore", user="root", password="123456", host="localhost", port="5432")
         try:
             conn.execute("CREATE TABLE tags (tag TEXT PRIMARY KEY)")
             conn.commit()
-        except sqlite3.Error as e:
+        except pg.Error as e:
             logging.error(str(e))
             conn.rollback()
 
@@ -132,7 +130,7 @@ class Scraper:
                 "content TEXT, tags TEXT, picture BLOB)"
             )
             conn.commit()
-        except sqlite3.Error as e:
+        except pg.Error as e:
             logging.error(str(e))
             conn.rollback()
 
@@ -142,7 +140,7 @@ class Scraper:
             )
             conn.execute("INSERT INTO progress values('0', '', 0)")
             conn.commit()
-        except sqlite3.Error as e:
+        except pg.Error as e:
             logging.error(str(e))
             conn.rollback()
 
@@ -157,7 +155,7 @@ class Scraper:
             '/div[@class=""]/div[@class="indent tag_cloud"]'
             "/table/tbody/tr/td/a/@href"
         )
-        conn = sqlite3.connect(self.database)
+        conn = pg.connect(database="bookstore", user="root", password="123456", host="localhost", port="5432")
         c = conn.cursor()
         try:
             for tag in tags:
@@ -166,7 +164,7 @@ class Scraper:
             c.close()
             conn.commit()
             conn.close()
-        except sqlite3.Error as e:
+        except pg.Error as e:
             logging.error(str(e))
             conn.rollback()
             return False
@@ -213,7 +211,7 @@ class Scraper:
 
     def get_tag_list(self) -> [str]:
         ret = []
-        conn = sqlite3.connect(self.database)
+        conn = pg.connect(database="bookstore", user="root", password="123456", host="localhost", port="5432")
         results = conn.execute(
             "SELECT tags.tag from tags join progress where tags.tag >= progress.tag"
         )
@@ -222,7 +220,7 @@ class Scraper:
         return ret
 
     def crow_book_info(self, book_id) -> bool:
-        conn = sqlite3.connect(self.database)
+        conn = pg.connect(database="bookstore", user="root", password="123456", host="localhost", port="5432")
         for _ in conn.execute("SELECT id from book where id = ('{}')".format(book_id)):
             return
 
@@ -363,7 +361,7 @@ class Scraper:
         unit = None
         price = None
         pages = None
-        conn = sqlite3.connect(self.database)
+        conn = pg.connect(database="bookstore", user="root", password="123456", host="localhost", port="5432")
         try:
             s_price = book_info.get("定价")
             if s_price is None:
@@ -409,7 +407,7 @@ class Scraper:
                 ),
             )
             conn.commit()
-        except sqlite3.Error as e:
+        except pg.Error as e:
             logging(str(e))
             conn.rollback()
         except TypeError as e:
