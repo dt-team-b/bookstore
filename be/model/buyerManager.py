@@ -2,11 +2,7 @@ import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-<<<<<<< HEAD
-from init_database.create_table import User, Store, Book, Order_status, Order, Order_info, Inventory_info, book_pic
-=======
 from be.model.database import User, Store, Order_status, Order, Inventory_info, book_pic
->>>>>>> 741a4cd7a8afc84a808a62a25ed59332e8664d6e
 import time
 import uuid
 import json
@@ -15,11 +11,7 @@ from be.model import db_conn
 from be.model import error
 
 
-<<<<<<< HEAD
-class Buyer:
-=======
 class BuyerManager(db_conn.DBConn):
->>>>>>> 741a4cd7a8afc84a808a62a25ed59332e8664d6e
     def __init__(self):
         engine = create_engine('postgresql://postgres:@localhost:5432/bookstore')
         DBSession = sessionmaker(bind=engine)
