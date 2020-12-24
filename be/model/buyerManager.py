@@ -2,7 +2,7 @@ import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-from init_database.create_table import User, Store, Book, Order_status, Order, Inventory_info, book_pic
+from init_database.create_table import User, Store, Book, Order_status, Order, Order_info, Inventory_info, book_pic
 import time
 import uuid
 import json
@@ -11,7 +11,7 @@ from be.model import db_conn
 from be.model import error
 
 
-class Buyer(db_conn.DBConn):
+class Buyer:
     def __init__(self):
         engine = create_engine('postgresql://postgres:@localhost:5432/bookstore')
         DBSession = sessionmaker(bind=engine)
@@ -46,8 +46,11 @@ class Buyer(db_conn.DBConn):
                 if rowcount == 0:
                     return error.error_stock_level_low(book_id) + (order_id, )
 
-                new_order = Order(order_id=uid, buyer_id=buyer_id, store_id=store_id, book_id=book_id, count=count, price=price, pt=pt, status=Order_status.pending)
-                session.add(new_order)
+                new_order_info = Order_info(order_id=uid, book_id=book_id, count=count, price=price)
+                session.add(new_order_info)
+
+            new_order = Order(id=uid, status=Order_status.pending, buyer_id=buyer_id, store_id=store_id, pt=pt)
+            session.add(new_order)
             
             self.session.commit()
             order_id = uid
@@ -64,64 +67,58 @@ class Buyer(db_conn.DBConn):
         conn = self.conn
         try:
             cursor = self.session.query(Order).filter_by(order_id=order_id, status=Order_status.pending)
-            rows = cursor.all()
-            if len(rows) == 0:
+            row = cursor.first()
+            if row is None:
                 return error.error_invalid_order_id(order_id)
 
-            order_id = row[0]
-            buyer_id = row[1]
-            store_id = row[2]
+            
+            buyer_id = row.buyer_id
+            store_id = row.store_id
 
             if buyer_id != user_id:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute("SELECT balance, password FROM user WHERE user_id = ?;", (buyer_id,))
-            row = cursor.fetchone()
+            cursor = self.session.query(User).filter_by(user_id=buyer_id)
+            row = cursor.first()
             if row is None:
                 return error.error_non_exist_user_id(buyer_id)
-            balance = row[0]
-            if password != row[1]:
+            balance = row.balance
+            if password != row.password:
                 return error.error_authorization_fail()
 
-            cursor = conn.execute("SELECT store_id, user_id FROM user_store WHERE store_id = ?;", (store_id,))
-            row = cursor.fetchone()
+            cursor = self.session.query(Store).filter_by(store_id=store_id)
+            row = cursor.first()
             if row is None:
                 return error.error_non_exist_store_id(store_id)
 
-            seller_id = row[1]
+            seller_id = row.owner
 
-            if not self.user_id_exist(seller_id):
+            if not self.session.query(User).filter_by(user_id=seller_id).exists():
                 return error.error_non_exist_user_id(seller_id)
 
-            cursor = conn.execute("SELECT book_id, count, price FROM new_order_detail WHERE order_id = ?;", (order_id,))
+            cursor = self.session.query(Order_info).filter_by(order_id=order_id)
             total_price = 0
-            for row in cursor:
-                count = row[1]
-                price = row[2]
+            for row in cursor.all():
+                count = row.count
+                price = row.price
                 total_price = total_price + price * count
 
             if balance < total_price:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE user set balance = balance - ?"
-                                  "WHERE user_id = ? AND balance >= ?",
-                                  (total_price, buyer_id, total_price))
-            if cursor.rowcount == 0:
+            cursor = self.session.query(User).filter(User.user_id==buyer_id, User.balance>=total_price)
+            rowcount = cursor.update({User.balance: User.balance - total_price})
+            if rowcount == 0:
                 return error.error_not_sufficient_funds(order_id)
 
-            cursor = conn.execute("UPDATE user set balance = balance + ?"
-                                  "WHERE user_id = ?",
-                                  (total_price, buyer_id))
-
-            if cursor.rowcount == 0:
+            cursor = self.session.query(User).filter(User.user_id==seller_id)
+            rowcount = cursor.update({User.balance: User.balance + total_price})
+            if rowcount == 0:
                 return error.error_non_exist_user_id(buyer_id)
 
-            cursor = conn.execute("DELETE FROM new_order WHERE order_id = ?", (order_id, ))
-            if cursor.rowcount == 0:
-                return error.error_invalid_order_id(order_id)
-
-            cursor = conn.execute("DELETE FROM new_order_detail where order_id = ?", (order_id, ))
-            if cursor.rowcount == 0:
+            cursor = self.session.query(Order).filter(Order.id==order_id)
+            rowcount = cursor.update({Order.status: Order_status.paid, Order.pt: time.time()})
+            if rowcount == 0:
                 return error.error_invalid_order_id(order_id)
 
             conn.commit()
@@ -136,18 +133,17 @@ class Buyer(db_conn.DBConn):
 
     def add_funds(self, user_id, password, add_value) -> (int, str):
         try:
-            cursor = self.conn.execute("SELECT password  from user where user_id=?", (user_id,))
-            row = cursor.fetchone()
+            cursor = self.session.query(User).filter_by(user_id=user_id)
+            row = cursor.first()
             if row is None:
                 return error.error_authorization_fail()
 
-            if row[0] != password:
+            if row.password != password:
                 return error.error_authorization_fail()
 
-            cursor = self.conn.execute(
-                "UPDATE user SET balance = balance + ? WHERE user_id = ?",
-                (add_value, user_id))
-            if cursor.rowcount == 0:
+            cursor = self.session.query(User).filter(User.user_id==user_id)
+            rowcount = cursor.update({User.balance: User.balance + add_value})
+            if rowcount == 0:
                 return error.error_non_exist_user_id(user_id)
 
             self.conn.commit()

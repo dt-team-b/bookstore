@@ -52,17 +52,17 @@ class Order(Base):
     __tablename__ = 'order'
     id = Column(String, primary_key=True)
     status = Column(Enum(Order_status), nullable=False)
+    buyer_id = Column(String, ForeignKey('user.user_id'), nullable=False)
+    store_id = Column(String, ForeignKey('store.store_id'), nullable=False)
+    pt = Column(DateTime, nullable=False)
 
 # 订单详情
 class Order_info(Base):
     __tablename__ = 'order_info'
     order_id = Column(String, ForeignKey('Order.id'), primary_key=True, nullable=False)
     book_id = Column(String, ForeignKey('book_info.id'), primary_key=True, nullable=False)
-    buyer_id = Column(String, ForeignKey('user.user_id'), nullable=False)
-    store_id = Column(String, ForeignKey('store.store_id'), nullable=False)
     count = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
-    pt = Column(DateTime, nullable=False)
     
 
 #库存信息
