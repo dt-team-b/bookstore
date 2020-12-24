@@ -2,7 +2,7 @@ import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-from init_database.create_table import User, Store, Book, Order_status, Order, Inventory_info, book_pic
+from be.model.database import User, Store, Order_status, Order, Inventory_info, book_pic
 import time
 import uuid
 import json
@@ -11,7 +11,7 @@ from be.model import db_conn
 from be.model import error
 
 
-class Buyer(db_conn.DBConn):
+class BuyerManager(db_conn.DBConn):
     def __init__(self):
         engine = create_engine('postgresql://postgres:@localhost:5432/bookstore')
         DBSession = sessionmaker(bind=engine)
@@ -21,7 +21,7 @@ class Buyer(db_conn.DBConn):
         order_id = ""
         try:
             if not self.session.query(User).filter_by(user_id=user_id).exists():
-                return error.error_non_exist_user_id(user_id) + (order_id, )
+                return error.error_non_exist_user_id(user_id) + (order_id,)
             if not self.session.query(Store).filter_by(store_id=store_id).exists():
                 return error.error_non_exist_store_id(store_id) + (order_id, )
             uid = "{}_{}_{}".format(user_id, store_id, str(uuid.uuid1()))
