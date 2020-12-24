@@ -59,7 +59,7 @@ class Order(Base):
 # 订单详情
 class Order_info(Base):
     __tablename__ = 'order_info'
-    order_id = Column(String, ForeignKey('Order.id'), primary_key=True, nullable=False)
+    order_id = Column(String, ForeignKey('order.id'), primary_key=True, nullable=False)
     book_id = Column(String, ForeignKey('book_info.id'), primary_key=True, nullable=False)
     count = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
