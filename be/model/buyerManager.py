@@ -2,7 +2,7 @@ import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-from be.model.database import User, Store, Order_status, Order, Inventory_info, book_pic
+from be.database import User, Store, Order_status, Order
 import time
 import uuid
 import json
@@ -28,22 +28,22 @@ class BuyerManager():
             pt = time.time()
 
             for book_id, count in id_and_count:
-                cursor = self.session.query(Inventory_info).filter_by(store_id=store_id, book_id=book_id)
+                cursor = self.session.query(Book_info).filter_by(store_id=store_id, book_id=book_id)
                 row = cursor.first()
                 if row is None:
-                    return error.error_non_exist_book_id(book_id) + (order_id, )
+                    return error.error_non_exist_book_id(book_id) + (order_id,)
 
                 inventory_count = row.inventory_count
                 price = row.price
 
                 if inventory_count < count:
                     return error.error_stock_level_low(book_id) + (order_id,)
-                
 
-                cursor = self.session.query(Inventory_info).filter(Inventory_info.store_id==store_id, Inventory_info.book_id==book_id, Inventory_info.inventory_count>=count)
-                rowcount = cursor.update({Inventory_info.inventory_count: Inventory_info.inventory_count - count})
+                cursor = self.session.query(Book_info).filter(store_id == store_id, book_id == book_id,
+                                                              inventory_count >= count)
+                rowcount = cursor.update({Book_info.inventory_count: Book_info.inventory_count - count})
                 if rowcount == 0:
-                    return error.error_stock_level_low(book_id) + (order_id, )
+                    return error.error_stock_level_low(book_id) + (order_id,)
 
                 new_order_info = Order_info(order_id=uid, book_id=book_id, count=count, price=price)
                 session.add(new_order_info)

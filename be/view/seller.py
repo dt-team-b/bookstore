@@ -20,14 +20,12 @@ def seller_create_store():
 def seller_add_book():
     user_id: str = request.json.get("user_id")
     store_id: str = request.json.get("store_id")
-    book_info: str = request.json.get("book_info")
-    stock_level: str = request.json.get("stock_level", 0)
+    book_info: dict = request.json.get("book_info")
+    stock_level: int = request.json.get("stock_level", 0)
 
     s = sellerManager.SellerManager()
 
-    code, message = s.add_book(user_id, store_id, book_info)
-    if code == 200:
-        code, message = s.add_inventory(user_id, store_id, book_info, stock_level)
+    code, message = s.add_book(user_id, store_id, book_info, stock_level)
 
     return jsonify({"message": message}), code
 

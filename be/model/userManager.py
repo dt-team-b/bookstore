@@ -5,7 +5,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from be.model.database import User, Store, Book_info, Order_status, Order, Inventory_info, book_pic
+from be.database import User
 from be.model import error
 
 # encode a json string like:
