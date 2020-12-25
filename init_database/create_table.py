@@ -84,6 +84,7 @@ class book_pic(Base):
 if __name__ == "__main__":
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     session.commit()
     print("finish")
