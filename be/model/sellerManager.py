@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 class SellerManager():
     def __init__(self):
         engine = create_engine(
-            'postgresql+psycopg2://postgres:wengsy@localhost:5432/bookstore')
+            'postgresql://root:123456@localhost:5432/bookstore')
         self.session = sessionmaker(bind=engine)()
 
     def add_book(self, user_id: str, store_id: str, book_info: dict):
@@ -51,8 +51,7 @@ class SellerManager():
 
             self.session.commit()
             self.session.close()
-        except IntegrityError as e:
-            return 528, "{}".format(str(e))
+            
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
@@ -73,8 +72,7 @@ class SellerManager():
 
             self.session.commit()
             self.session.close()
-        except IntegrityError as e:
-            return 528, "{}".format(str(e))
+            
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
@@ -95,9 +93,7 @@ class SellerManager():
             inventory_info.inventory_count += add_stock_level
             self.session.commit()
             self.session.close()
-
-        except IntegrityError as e:
-            return 528, "{}".format(str(e))
+            
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
@@ -114,8 +110,7 @@ class SellerManager():
             self.session.add(store)
             self.session.commit()
             self.session.close()
-        except IntegrityError as e:
-            return 528, "{}".format(str(e))
+            
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"

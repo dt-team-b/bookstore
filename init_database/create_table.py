@@ -6,7 +6,7 @@ from sqlalchemy import Column, String, Integer, ForeignKey, create_engine, Prima
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine('postgresql://postgres:@localhost:5432/bookstore')
+engine = create_engine('postgresql://root:123456@localhost:5432/bookstore')
 Base = declarative_base()
 
 class User(Base):

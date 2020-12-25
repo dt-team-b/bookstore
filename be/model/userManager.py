@@ -1,13 +1,12 @@
 import jwt
 import time
 import logging
-import sqlite3 as sqlite
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from bookstore.init_database.create_table import User, Store, Book_info, Order_status, Order, Inventory_info, book_pic
-from bookstore.be.model import error
+from init_database.create_table import User, Store, Book_info, Order_status, Order, Inventory_info, book_pic
+from be.model import error
 
 # encode a json string like:
 #   {
@@ -37,11 +36,11 @@ def jwt_decode(encoded_token, user_id: str) -> str:
     return decoded
 
 
-class Gamer():
+class userManager():
     token_lifetime: int = 3600  # 3600 second
 
     def __init__(self):
-        engine = create_engine('postgresql://postgres:@localhost:5432/bookstore')
+        engine = create_engine('postgresql://root:123456@localhost:5432/bookstore')
         DBSession = sessionmaker(bind=engine)
         self.session = DBSession()
 
@@ -72,7 +71,7 @@ class Gamer():
             )
             self.session.add(new_gamer)
             self.session.commit()
-        except sqlite.Error:
+        except BaseException:
             return error.error_exist_user_id(user_id)
         return 200, "ok"
 
@@ -113,8 +112,7 @@ class Gamer():
             user_.token = token
             user_.terminal = terminal
             self.session.commit()
-        except sqlite.Error as e:
-            return 528, "{}".format(str(e)), ""
+            
         except BaseException as e:
             return 530, "{}".format(str(e)), ""
         return 200, "ok", token
@@ -138,8 +136,7 @@ class Gamer():
             user_.token = dummy_token
             user_.terminal = terminal
             self.session.commit()
-        except sqlite.Error as e:
-            return 528, "{}".format(str(e))
+            
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
@@ -156,8 +153,7 @@ class Gamer():
                 self.session.commit()
             else:
                 return error.error_authorization_fail()
-        except sqlite.Error as e:
-            return 528, "{}".format(str(e))
+            
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
@@ -183,8 +179,7 @@ class Gamer():
             user_.token = token
             user_.terminal = terminal
             self.session.commit()
-        except sqlite.Error as e:
-            return 528, "{}".format(str(e))
+            
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"

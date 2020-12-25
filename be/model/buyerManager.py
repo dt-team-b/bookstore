@@ -7,13 +7,12 @@ import time
 import uuid
 import json
 import logging
-from be.model import db_conn
 from be.model import error
 
 
-class BuyerManager(db_conn.DBConn):
+class BuyerManager():
     def __init__(self):
-        engine = create_engine('postgresql://postgres:@localhost:5432/bookstore')
+        engine = create_engine('postgresql://root:123456@localhost:5432/bookstore')
         DBSession = sessionmaker(bind=engine)
         self.session = DBSession()
 
@@ -54,9 +53,6 @@ class BuyerManager(db_conn.DBConn):
             
             self.session.commit()
             order_id = uid
-        except sqlite.Error as e:
-            logging.info("528, {}".format(str(e)))
-            return 528, "{}".format(str(e)), ""
         except BaseException as e:
             logging.info("530, {}".format(str(e)))
             return 530, "{}".format(str(e)), ""
@@ -121,10 +117,7 @@ class BuyerManager(db_conn.DBConn):
             if rowcount == 0:
                 return error.error_invalid_order_id(order_id)
 
-            conn.commit()
-
-        except sqlite.Error as e:
-            return 528, "{}".format(str(e))
+            self.session.commit()
 
         except BaseException as e:
             return 530, "{}".format(str(e))
@@ -146,9 +139,8 @@ class BuyerManager(db_conn.DBConn):
             if rowcount == 0:
                 return error.error_non_exist_user_id(user_id)
 
-            self.conn.commit()
-        except sqlite.Error as e:
-            return 528, "{}".format(str(e))
+            self.session.commit()
+            
         except BaseException as e:
             return 530, "{}".format(str(e))
 
