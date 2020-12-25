@@ -13,6 +13,7 @@ def seller_create_store():
     store_id: str = request.json.get("store_id")
     s = sellerManager.SellerManager()
     code, message = s.create_store(user_id, store_id)
+    
     return jsonify({"message": message}), code
 
 
@@ -20,8 +21,8 @@ def seller_create_store():
 def seller_add_book():
     user_id: str = request.json.get("user_id")
     store_id: str = request.json.get("store_id")
-    book_info: str = request.json.get("book_info")
-    stock_level: str = request.json.get("stock_level", 0)
+    book_info: dict = request.json.get("book_info")
+    stock_level: int = request.json.get("stock_level", 0)
 
     s = sellerManager.SellerManager()
 
@@ -37,7 +38,7 @@ def add_stock_level():
     user_id: str = request.json.get("user_id")
     store_id: str = request.json.get("store_id")
     book_id: str = request.json.get("book_id")
-    add_num: str = request.json.get("add_stock_level", 0)
+    add_num: int = request.json.get("add_stock_level", 0)
 
     s = sellerManager.SellerManager()
     code, message = s.add_stock_level(user_id, store_id, book_id, add_num)

@@ -2,7 +2,7 @@ import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-from be.model.database import User, Store, Order_status, Order, Inventory_info, book_pic
+from be.model.database import User, Store, Order_status, Order, Order_info, Inventory_info, book_pic
 import time
 import uuid
 import json

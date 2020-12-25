@@ -31,7 +31,6 @@ class Book_info(Base):
     translator = Column(Text)
     pub_year = Column(Text)
     pages = Column(Integer)
-    currency_unit = Column(Text)
     binding = Column(Text)
     isbn = Column(Text)
     author_intro = Column(Text)
