@@ -26,9 +26,7 @@ def seller_add_book():
 
     s = sellerManager.SellerManager()
 
-    code, message = s.add_book(user_id, store_id, book_info)
-    if code == 200:
-        code, message = s.add_inventory(user_id, store_id, book_info, stock_level)
+    code, message = s.add_book(user_id, store_id, book_info, stock_level)
 
     return jsonify({"message": message}), code
 
