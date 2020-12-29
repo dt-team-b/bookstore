@@ -1,9 +1,9 @@
 import psycopg2
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-from be.database import User, Store, Order_status, Order
-import time
+from be.database import User, Store, Order_status, Order, Order_info, Book_info
+import datetime
 import uuid
 import json
 import logging
@@ -19,16 +19,19 @@ class BuyerManager():
     def new_order(self, user_id: str, store_id: str, id_and_count: [(str, int)]) -> (int, str, str):
         order_id = ""
         try:
-            if not self.session.query(User).filter_by(user_id=user_id).exists():
+            if self.session.query(User).filter_by(user_id=user_id).first() is None:
                 return error.error_non_exist_user_id(user_id) + (order_id,)
-            if not self.session.query(Store).filter_by(store_id=store_id).exists():
+            if self.session.query(Store).filter_by(store_id=store_id).first() is None:
                 return error.error_non_exist_store_id(store_id) + (order_id, )
             uid = "{}_{}_{}".format(user_id, store_id, str(uuid.uuid1()))
 
-            pt = time.time()
+            pt = datetime.datetime.now()
+
+            new_order = Order(id=uid, status=Order_status.pending, buyer_id=user_id, store_id=store_id, pt=pt)
+            self.session.add(new_order)
 
             for book_id, count in id_and_count:
-                cursor = self.session.query(Book_info).filter_by(store_id=store_id, book_id=book_id)
+                cursor = self.session.query(Book_info).filter_by(id=book_id, store_id=store_id)
                 row = cursor.first()
                 if row is None:
                     return error.error_non_exist_book_id(book_id) + (order_id,)
@@ -39,17 +42,13 @@ class BuyerManager():
                 if inventory_count < count:
                     return error.error_stock_level_low(book_id) + (order_id,)
 
-                cursor = self.session.query(Book_info).filter(store_id == store_id, book_id == book_id,
-                                                              inventory_count >= count)
+                cursor = self.session.query(Book_info).filter(Book_info.id==book_id, Book_info.store_id==store_id, Book_info.inventory_count >= count)
                 rowcount = cursor.update({Book_info.inventory_count: Book_info.inventory_count - count})
                 if rowcount == 0:
                     return error.error_stock_level_low(book_id) + (order_id,)
 
                 new_order_info = Order_info(order_id=uid, book_id=book_id, count=count, price=price)
-                session.add(new_order_info)
-
-            new_order = Order(id=uid, status=Order_status.pending, buyer_id=buyer_id, store_id=store_id, pt=pt)
-            session.add(new_order)
+                self.session.add(new_order_info)
             
             self.session.commit()
             order_id = uid
@@ -60,9 +59,8 @@ class BuyerManager():
         return 200, "ok", order_id
 
     def payment(self, user_id: str, password: str, order_id: str) -> (int, str):
-        conn = self.conn
         try:
-            cursor = self.session.query(Order).filter_by(order_id=order_id, status=Order_status.pending)
+            cursor = self.session.query(Order).filter_by(id=order_id, status=Order_status.pending)
             row = cursor.first()
             if row is None:
                 return error.error_invalid_order_id(order_id)
@@ -89,7 +87,7 @@ class BuyerManager():
 
             seller_id = row.owner
 
-            if not self.session.query(User).filter_by(user_id=seller_id).exists():
+            if self.session.query(User).filter_by(user_id=seller_id).first() is None:
                 return error.error_non_exist_user_id(seller_id)
 
             cursor = self.session.query(Order_info).filter_by(order_id=order_id)
@@ -113,13 +111,14 @@ class BuyerManager():
                 return error.error_non_exist_user_id(buyer_id)
 
             cursor = self.session.query(Order).filter(Order.id==order_id)
-            rowcount = cursor.update({Order.status: Order_status.paid, Order.pt: time.time()})
+            rowcount = cursor.update({Order.status: Order_status.paid, Order.pt: datetime.datetime.now()})
             if rowcount == 0:
                 return error.error_invalid_order_id(order_id)
 
             self.session.commit()
 
         except BaseException as e:
+            print(e)
             return 530, "{}".format(str(e))
 
         return 200, "ok"

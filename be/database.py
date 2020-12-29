@@ -1,19 +1,17 @@
 import enum
 
 import psycopg2
-from sqlalchemy import create_engine, BigInteger, ForeignKeyConstraint
-from sqlalchemy import Column, String, Integer, ForeignKey, create_engine, PrimaryKeyConstraint, Text, DateTime, \
-    Boolean, LargeBinary, Enum
+from sqlalchemy import create_engine, Column
+from sqlalchemy import BigInteger, String, Integer, ForeignKey, ForeignKeyConstraint, Text, DateTime, Boolean, LargeBinary, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 engine = create_engine('postgresql://root:123456@localhost:5432/bookstore')
 Base = declarative_base()
 
-
 class User(Base):
     __tablename__ = 'user'
-    user_id = Column(String, primary_key=True, autoincrement=1)
+    user_id = Column(String,primary_key=True)
     password = Column(String, nullable=False)
     balance = Column(Integer, nullable=False)
     token = Column(String, nullable=False)
@@ -21,13 +19,13 @@ class User(Base):
 
 class Store(Base):
     __tablename__ = 'store'
-    store_id = Column(String,nullable=False,primary_key=True,autoincrement=1)
-    owner = Column(String, ForeignKey('user.user_id'), nullable=False, index = True)
+    store_id = Column(String,nullable=False,primary_key=True)
+    owner = Column(String, ForeignKey('user.user_id'), nullable=False, index=True)
 
 class Book_info(Base):
     __tablename__ = 'book_info'
+    id = Column(String, primary_key=True)
     store_id = Column(String, ForeignKey('store.store_id'), primary_key=True)
-    id = Column(String, primary_key=True, autoincrement=1)
     title = Column(String, nullable=False)
     author = Column(String)
     publisher = Column(Text)
@@ -35,7 +33,6 @@ class Book_info(Base):
     translator = Column(Text)
     pub_year = Column(Text)
     pages = Column(Integer)
-    currency_unit = Column(Text)
     binding = Column(Text)
     isbn = Column(Text)
     author_intro = Column(Text)
@@ -66,21 +63,20 @@ class Order(Base):
 class Order_info(Base):
     __tablename__ = 'order_info'
     order_id = Column(String, ForeignKey('order.id'), primary_key=True, nullable=False)
-    store_id = Column(String, primary_key=True, nullable=False)
     book_id = Column(String, primary_key=True, nullable=False)
+    store_id = Column(String)
     ForeignKeyConstraint(['store_id', 'book_id'], ['book_info.store_id', 'book_info.id'])
     count = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
+    
 
-
-# 书籍图片
+#书籍图片
 class Book_pic(Base):
     __tablename__ = 'book_pic'
     store_id = Column(String, primary_key=True)
     book_id = Column(String, primary_key=True)
     ForeignKeyConstraint(['store_id', 'book_id'], ['book_info.store_id', 'book_info.id'])
-    picture = Column(LargeBinary, nullable=False)
-
+    picture = Column(LargeBinary,nullable=False)
 
 def run_clear():
     DBSession = sessionmaker(bind=engine)
