@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask import request
 from flask import jsonify
-from be.model import sellerManager
+from be.model.sellerManager import SellerManager
 import json
 
 bp_seller = Blueprint("seller", __name__, url_prefix="/seller")
@@ -11,7 +11,8 @@ bp_seller = Blueprint("seller", __name__, url_prefix="/seller")
 def seller_create_store():
     user_id: str = request.json.get("user_id")
     store_id: str = request.json.get("store_id")
-    s = sellerManager.SellerManager()
+    
+    s = SellerManager()
     code, message = s.create_store(user_id, store_id)
     
     return jsonify({"message": message}), code
@@ -24,8 +25,7 @@ def seller_add_book():
     book_info: dict = request.json.get("book_info")
     stock_level: int = request.json.get("stock_level", 0)
 
-    s = sellerManager.SellerManager()
-
+    s = SellerManager()
     code, message = s.add_book(user_id, store_id, book_info, stock_level)
 
     return jsonify({"message": message}), code
@@ -38,7 +38,18 @@ def add_stock_level():
     book_id: str = request.json.get("book_id")
     add_num: int = request.json.get("add_stock_level", 0)
 
-    s = sellerManager.SellerManager()
+    s = SellerManager()
     code, message = s.add_stock_level(user_id, store_id, book_id, add_num)
+
+    return jsonify({"message": message}), code
+
+
+@bp_seller.route("/deliver", methods=["POST"])
+def deliver():
+    user_id: str = request.json.get("user_id")
+    order_id: str = request.json.get("order_id")
+
+    s = SellerManager()
+    code, message = s.deliver(user_id, order_id)
 
     return jsonify({"message": message}), code

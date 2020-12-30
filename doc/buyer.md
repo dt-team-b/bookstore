@@ -156,8 +156,8 @@ POST http://[address]/buyer/receive
 ```json
 {
   "user_id": "$user_id$",
-  "password": "$password$",
-  "order_id": "$order_id$"
+  "order_id": "order_id",
+  "password": "password"
 }
 ```
 
@@ -177,3 +177,38 @@ Status Code:
 200 | 充值成功
 401 | 授权失败
 5XX | 无效参数
+
+## 买家取消订单
+
+#### URL：
+POST http://[address]/buyer/cancel
+
+#### Request
+
+##### Body:
+```json
+{
+  "user_id": "buyer_id",
+  "order_id": "order_id",
+  "password": "password"
+}
+```
+
+##### 属性说明：
+
+变量名 | 类型 | 描述 | 是否可为空
+---|---|---|---
+user_id | string | 买家用户ID | N
+order_id | string | 订单ID | N
+password | string | 买家用户密码 | N 
+
+
+#### Response
+
+Status Code:
+
+码 | 描述
+--- | ---
+200 | 取消成功
+5XX | 无效参数
+401 | 授权失败
