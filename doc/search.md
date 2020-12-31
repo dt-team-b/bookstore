@@ -33,6 +33,18 @@ Body:
       "key word2",
       "key word3",
       "..."
+    ],
+    "authors_or_translators": [
+      "author1",
+      "author2",
+      "author3",
+      "..."
+    ],
+    "publishers":[
+      "publisher1",
+      "publisher2",
+      "publisher3",
+      "..."
     ]
   },
   "store_id": "$store id$",
@@ -53,8 +65,10 @@ key | 类型 | 描述 | 是否可为空
 title | array | 标题关键词 | Y
 tags | array | 标签 | Y
 contents | array | 内容关键词 | Y
+authors_or_translators | array | 作者或译者 | Y
+publishers| array | 出版社 | Y
 
-title,tags,contents的每个元素都是string类型的。其中，tags的元素只能精确匹配，其余两者可以模糊搜索。
+title,tags,contents,authors_or_translators,publishers的每个元素都是string类型的。其中，tags的元素只能精确匹配，其余可以模糊搜索。查询返回各个类目中均符合至少其中一个关键词的结果。
 
 #### Response
 
