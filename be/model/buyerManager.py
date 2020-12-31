@@ -51,6 +51,7 @@ class BuyerManager():
                 self.session.add(new_order_info)
             
             self.session.commit()
+            self.session.close()
             order_id = uid
         except BaseException as e:
             logging.info("530, {}".format(str(e)))
@@ -116,6 +117,7 @@ class BuyerManager():
                 return error.error_invalid_order_id(order_id)
 
             self.session.commit()
+            self.session.close()
 
         except BaseException as e:
             print(e)
@@ -139,8 +141,67 @@ class BuyerManager():
                 return error.error_non_exist_user_id(user_id)
 
             self.session.commit()
+            self.session.close()
             
         except BaseException as e:
             return 530, "{}".format(str(e))
 
         return 200, "ok"
+
+    def receive(self, user_id: str, password: str, order_id: str):
+        try:
+            if self.session.query(User).filter_by(user_id=user_id).first() is None:
+                return error.error_non_exist_user_id(user_id)
+            
+            cursor = self.session.query(Order).filter_by(id=order_id, buyer_id=user_id, status=Order_status.delivering)
+            rowcount = cursor.update({Order.status: Order_status.received})
+            if rowcount == 0:
+                return error.error_non_exist_user_id(user_id)
+
+            self.session.commit()
+            self.session.close()
+            
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok"
+
+    def cancel(self, user_id: str, password: str, order_id: str):
+        try:
+            if self.session.query(User).filter_by(user_id=user_id).first() is None:
+                return error.error_non_exist_user_id(user_id)
+
+            cursor = self.session.query(Order).filter_by(id=order_id, buyer_id=user_id, status=Order_status.pending)
+            rowcount = cursor.update({Order.status: Order_status.cancelled})
+            if rowcount == 0:
+                return error.error_non_exist_user_id(user_id)
+
+            self.session.commit()
+            self.session.close()
+            
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok"
+
+    def history(self, user_id: str):
+        try:
+            cursor = self.session.query(Order).filter_by(buyer_id=user_id)
+            order_list = cursor.all()
+            orders = []
+            for order in order_list:
+                order_infos = self.session.query(Order_info).filter_by(order_id=order.id).all()
+                orders.append({
+                    "buyer_id": order.buyer_id,
+                    "store_id": order.store_id,
+                    "status": order.status,
+                    "book_list": [
+                        {"book_id": odi.book_id, "count": odi.count, "price": price}
+                        for odi in order_infos
+                    ]
+                })
+            self.session.close()
+        except BaseException as e:
+            return 530, "{}".format(str(e)), []
+        return 200, "ok", orders
+

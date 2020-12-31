@@ -70,11 +70,12 @@ class Order_info(Base):
     price = Column(Integer, nullable=False)
     
 
-#书籍图片
+# 书籍图片
 class Book_pic(Base):
     __tablename__ = 'book_pic'
     store_id = Column(String, primary_key=True)
     book_id = Column(String, primary_key=True)
+    pic_id = Column(Integer, primary_key=True, autoincrement=True)
     ForeignKeyConstraint(['store_id', 'book_id'], ['book_info.store_id', 'book_info.id'])
     picture = Column(LargeBinary,nullable=False)
 

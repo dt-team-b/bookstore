@@ -44,20 +44,19 @@ class SellerManager():
             book.tags = book_info.get("tags", None)
             self.session.add(book)
 
-            self.session.commit()
-
             pictures = book_info.get("pictures", [])
             for pic in pictures:
                 book_pic = Book_pic()
                 book_pic.book_id = book.id
                 book_pic.store_id = store_id
-                # book_pic.picture = pic
+                book_pic.picture = pic.encode('ascii')
                 self.session.add(book_pic)
 
+            self.session.commit()
             self.session.close()
             
         except BaseException as e:
-            return e, "{}".format(str(e))
+            return 530, "{}".format(str(e))
         return 200, "ok"
 
 
@@ -86,8 +85,10 @@ class SellerManager():
         try:
             if not self.user_id_exist(user_id):
                 return error.error_non_exist_user_id(user_id)
+            
             if self.store_id_exist(store_id):
                 return error.error_exist_store_id(store_id)
+            
             store = Store()
             store.store_id = store_id
             store.owner = user_id
@@ -98,6 +99,24 @@ class SellerManager():
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
+
+    def deliver(self, store_id: str, order_id: str) -> (int, str):
+        try:
+            if not self.store_id_exist(store_id):
+                return error.error_non_exist_store_id(store_id)
+
+            cursor = self.session.query(Order).filter_by(id=order_id, store_id=store_id, status=Order_status.paid)
+            rowcount = cursor.update({Order.status: Order_status.delivering})
+            if rowcount == 0:
+                return error.error_invalid_order_id(order_id)
+
+            self.session.commit()
+            self.session.close()
+            
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+        return 200, "ok"
+        
 
     def user_id_exist(self, user_id):
         return self.session.query(User).filter(User.user_id == user_id).first() is not None

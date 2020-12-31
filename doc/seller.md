@@ -195,13 +195,13 @@ Body:
 
 ```json
 {
-  "user_id": "$seller id$",
+  "store_id": "$store_id$",
   "order_id": "$order_id$"
 }
 ```
 key | 类型 | 描述 | 是否可为空
 ---|---|---|---
-user_id | string | 卖家用户ID | N
+store_id | string | 卖家商铺ID | N
 order_id | string | 订单ID | N
 
 #### Response

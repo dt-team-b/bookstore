@@ -46,7 +46,7 @@ def add_stock_level():
 
 @bp_seller.route("/deliver", methods=["POST"])
 def deliver():
-    user_id: str = request.json.get("user_id")
+    store_id: str = request.json.get("store_id")
     order_id: str = request.json.get("order_id")
 
     s = SellerManager()

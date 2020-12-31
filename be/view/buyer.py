@@ -60,3 +60,10 @@ def cancel():
     b = BuyerManager()
     code, message = b.cancel(user_id, password, order_id)
     return jsonify({"message": message}), code
+
+@bp_buyer.route("/history", methods=["POST"])
+def history():
+    user_id: str = request.json.get("user_id")
+    u = BuyerManager()
+    code, message, orders = u.history(user_id=user_id)
+    return jsonify({"message": message, "orders": orders}), code

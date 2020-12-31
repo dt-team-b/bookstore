@@ -36,7 +36,7 @@ def jwt_decode(encoded_token, user_id: str) -> str:
     return decoded
 
 
-class userManager():
+class UserManager():
     token_lifetime: int = 3600  # 3600 second
 
     def __init__(self):
@@ -77,8 +77,7 @@ class userManager():
 
     def check_token(self, user_id: str, token: str) -> (int, str):
         get_token = self.session.query(User).filter(User.user_id==user_id).first()
-        # cursor = self.conn.execute("SELECT token from user where user_id=?", (user_id,))
-        # row = cursor.fetchone()
+
         if get_token is None:
             return error.error_authorization_fail()
         db_token = get_token.token
@@ -88,8 +87,7 @@ class userManager():
 
     def check_password(self, user_id: str, password: str) -> (int, str):
         get_passwd = self.session.query(User).filter(User.user_id==user_id).first()
-        # cursor = self.conn.execute("SELECT password from user where user_id=?", (user_id,))
-        # row = cursor.fetchone()
+        
         if get_passwd is None:
             return error.error_authorization_fail()
 
@@ -128,9 +126,6 @@ class userManager():
 
             user_ = self.session.query(User).filter(User.user_id == user_id).first()
 
-            # cursor = self.conn.execute(
-            #     "UPDATE user SET token = ?, terminal = ? WHERE user_id=?",
-            #     (dummy_token, terminal, user_id), )
             if user_ is None:
                 return error.error_authorization_fail()
             user_.token = dummy_token
@@ -148,7 +143,7 @@ class userManager():
                 return code, message
             query = self.session.query(User).filter(User.user_id == user_id)
             query.delete()
-            # cursor = self.conn.execute("DELETE from user where user_id=?", (user_id,))
+
             if query.first() is None:
                 self.session.commit()
             else:
@@ -170,9 +165,7 @@ class userManager():
             user_.password = new_password
             user_.token = token
             user_.terminal = terminal
-            # cursor = self.conn.execute(
-            #     "UPDATE user set password = ?, token= ? , terminal = ? where user_id = ?",
-            #     (new_password, token, terminal, user_id), )
+            
             if user_ is None:
                 return error.error_authorization_fail()
             user_.password = new_password
@@ -184,10 +177,4 @@ class userManager():
             return 530, "{}".format(str(e))
         return 200, "ok"
 
-    def history(self, user_id: str):
-        try:
-            #some code
-        except BaseException as e:
-            return 530, "{}".format(str(e))
-        return 200, "ok"
 
