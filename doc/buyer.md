@@ -156,8 +156,8 @@ POST http://[address]/buyer/receive
 ```json
 {
   "user_id": "$user_id$",
-  "order_id": "order_id",
-  "password": "password"
+  "order_id": "$order_id$",
+  "password": "$password$"
 }
 ```
 
@@ -188,9 +188,9 @@ POST http://[address]/buyer/cancel
 ##### Body:
 ```json
 {
-  "user_id": "buyer_id",
-  "order_id": "order_id",
-  "password": "password"
+  "user_id": "$buyer_id$",
+  "order_id": "$order_id$",
+  "password": "$password$"
 }
 ```
 

@@ -184,3 +184,10 @@ class userManager():
             return 530, "{}".format(str(e))
         return 200, "ok"
 
+    def history(self, user_id: str):
+        try:
+            #some code
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+        return 200, "ok"
+

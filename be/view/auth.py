@@ -51,3 +51,11 @@ def change_password():
     u = userManager.userManager()
     code, message = u.change_password(user_id=user_id, old_password=old_password, new_password=new_password)
     return jsonify({"message": message}), code
+
+
+@bp_auth.route("/history", methods=["POST"])
+def change_password():
+    user_id = request.json.get("user_id", "")
+    u = userManager.userManager()
+    code, message = u.history(user_id=user_id)
+    return jsonify({"message": message}), code
