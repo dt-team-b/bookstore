@@ -1,4 +1,7 @@
 import psycopg2
+from sqlalchemy.orm import sessionmaker
+
+from be.database import Book_pic
 from be.model import error, sellerManager
 from sqlalchemy import create_engine
 
@@ -12,6 +15,7 @@ class SearchManager():
         engine = create_engine(
             'postgresql://root:123456@localhost:5432/bookstore')
         connection = engine.raw_connection()
+        self.session = sessionmaker(bind=engine)()
         self.cursor = connection.cursor()
 
     def search(self, store_id: str, page_id: int, search_info: dict) -> (int, str, list):
@@ -48,6 +52,14 @@ class SearchManager():
             self.cursor.execute(sql)
             self.cursor.scroll(page_id * 30)
             result = [self.trans_result(x) for x in self.cursor.fetchmany(30)]
+
+            for book in result:
+                pictures = []
+                for pic in self.session.query(Book_pic).filter(Book_pic.store_id == book['store_id'],
+                                                               Book_pic.book_id == book['id']):
+                    pictures.append(pic.picture)
+                book['pictures'] = pictures
+
 
 
         except psycopg2.ProgrammingError as e:
