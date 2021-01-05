@@ -1,13 +1,13 @@
 import psycopg2
 from sqlalchemy.orm import sessionmaker
 
-from be.database import Book_pic
+from be.database import Book_pic, Book_tag
 from be.model import error, sellerManager
 from sqlalchemy import create_engine
 
-book_info_column = ['id', 'store_id', 'title', 'author', 'publisher', 'original_title', 'translator',
-                    'pub_year', 'pages', 'binding', 'isbn', 'author_intro', 'content', 'inventory_count', 'price',
-                    'tags']
+book_info_column = ['book_info.id', 'book_info.store_id', 'title', 'author', 'publisher', 'original_title',
+                    'translator',
+                    'pub_year', 'pages', 'binding', 'isbn', 'author_intro', 'content', 'inventory_count', 'price']
 
 
 class SearchManager():
@@ -23,7 +23,7 @@ class SearchManager():
             if not sellerManager.SellerManager().store_id_exist(store_id):
                 return error.error_non_exist_store_id(store_id) + ([],)
 
-            sql: str = "select * from book_info "
+            sql: str = "select " + ','.join(book_info_column) + " from book_info "
 
             title = search_info.get("title", [])
             tags = search_info.get("tags", [])
@@ -42,30 +42,36 @@ class SearchManager():
             if len(publishers) != 0:
                 predicate.append(self.get_like_predicate('publisher', publishers))
             if len(tags) != 0:
-                predicate.append(self.get_equal_predicate('tags', tags))
+                sql += ",book_tag "
+                predicate.append(self.get_tag_predicate('tags', tags))
 
             while None in predicate:
                 predicate.remove(None)
             if len(predicate) != 0:
                 sql += 'where ' + ' and '.join(predicate) + ";"
-
+            print(sql)
             self.cursor.execute(sql)
             self.cursor.scroll(page_id * 30)
             result = [self.trans_result(x) for x in self.cursor.fetchmany(30)]
 
             for book in result:
                 pictures = []
+                tags = []
                 for pic in self.session.query(Book_pic).filter(Book_pic.store_id == book['store_id'],
                                                                Book_pic.book_id == book['id']):
                     pictures.append(pic.picture)
+                for tag in self.session.query(Book_tag).filter(Book_tag.store_id == book['store_id'],
+                                                               Book_tag.id == book['id']):
+                    tags.append(tag.tag)
                 book['pictures'] = pictures
+                book['tags'] = tags
 
 
 
         except psycopg2.ProgrammingError as e:
             return 531, "{}".format("page id not exists."), []
         except BaseException as e:
-            return 530, "{}".format(repr(e)), []
+            return str(e), "{}".format(repr(e)), []
 
         return 200, "ok", result
 
@@ -73,7 +79,7 @@ class SearchManager():
         cnt = 0
         ans = {}
         for column in book_info_column:
-            ans[column] = result[cnt]
+            ans[column.split('.')[-1]] = result[cnt]
             cnt += 1
         return ans
 
@@ -84,9 +90,9 @@ class SearchManager():
 
         return '(' + ' or '.join(ans) + ')'
 
-    def get_equal_predicate(self, attribute, keywords):
+    def get_tag_predicate(self, attribute, keywords):
         ans = []
         for kw in keywords:
-            ans.append(attribute + " = '" + kw + "'")
+            ans.append("tag = '{}'".format(kw))
 
-        return '(' + ' or '.join(ans) + ')'
+        return 'book_tag.id = book_info.id and (' + ' or '.join(ans) + ')'

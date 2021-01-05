@@ -40,15 +40,22 @@ class Book_info(Base):
     content = Column(Text)
     inventory_count = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)  # 原价
-    tags = Column(String, index=True)
 
-#订单状态
+
+class Book_tag(Base):
+    __tablename__ = 'book_tag'
+    id = Column(String, primary_key=True)
+    store_id = Column(String, ForeignKey('store.store_id'), primary_key=True)
+    tag = Column(String, primary_key=True)
+
+
+# 订单状态
 class Order_status(enum.Enum):
-    pending = 0     #等待付款
-    cancelled = 1   #已取消
-    paid = 2        #已付款等待发货
-    delivering = 3  #已发货
-    received = 4    #已确认收货
+    pending = 0  # 等待付款
+    cancelled = 1  # 已取消
+    paid = 2  # 已付款等待发货
+    delivering = 3  # 已发货
+    received = 4  # 已确认收货
 
 # 订单概要
 class Order(Base):
