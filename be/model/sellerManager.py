@@ -1,5 +1,5 @@
 from be.model import error
-from be.database import User, Store, Book_info, Book_pic
+from be.database import User, Store, Book_info, Book_pic, Book_tag
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
@@ -41,8 +41,16 @@ class SellerManager():
             book.inventory_count = stock_level
 
             book.price = book_info.get("price", 0)
-            book.tags = book_info.get("tags", None)
+
             self.session.add(book)
+
+            book.tags = book_info.get("tags", [])
+            for tag in book.tags:
+                book_tag = Book_tag()
+                book_tag.id = book.id
+                book_tag.store_id = store_id
+                book_tag.tag = tag
+                self.session.add(book_tag)
 
             pictures = book_info.get("pictures", [])
             for pic in pictures:
